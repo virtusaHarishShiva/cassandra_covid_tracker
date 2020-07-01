@@ -1,5 +1,5 @@
 const express = require("express")
-const cassandra     = require("cassandra-driver");
+const {Client}     = require("cassandra-driver");
 
 require('dotenv').config();
 
@@ -26,7 +26,7 @@ const client = new Client({
     credentials: { username: 'user', password: 'password' }
 });
 
-await client.connect();
+client.connect();
 // ***************************************************************************************** //
 
 
