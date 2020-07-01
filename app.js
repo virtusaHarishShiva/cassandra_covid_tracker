@@ -22,8 +22,8 @@ const table     = "covid_table_prac";
 //for production
 // ***************************************************************************************** //
 const client = new Client({
-    cloud: { secureConnectBundle: './secure-connect-data.zip' },
-    credentials: { username: 'user', password: 'password' }
+    cloud: { secureConnectBundle: './secure-connect-covid-table.zip' },
+    credentials: { username: process.env.CASSANDRA_USER, password: process.env.CASSANDRA_PASS }
 });
 
 client.connect();
