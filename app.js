@@ -1,64 +1,20 @@
-const express = require("express")
-const {Client}     = require("cassandra-driver");
+const express              = require("express")
+const bodyParser           = require("body-parser");
+
+var {showFullData, insert_into} = require("./src/model");
 
 require('dotenv').config();
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+// parse application/json
+app.use(bodyParser.json())
+
 const keyspace  = "covid_keyspace";
-const table     = "covid_table_prac";
-
-// for development
-// ***************************************************************************************** //
-// const client        = new cassandra.Client({
-//     contactPoints:[process.env.CASSANDRA_HOST + ':' + process.env.CASSANDRA_PORT],
-//     localDataCenter: 'datacenter1',
-//     keyspace: 'prac_keyspace'
-// });
-// ***************************************************************************************** //
-
-
-//for production
-// ***************************************************************************************** //
-const client = new Client({
-    cloud: { secureConnectBundle: './secure-connect-covid-table.zip' },
-    credentials: { username: process.env.CASSANDRA_USER, password: process.env.CASSANDRA_PASS }
-});
-
-client.connect();
-// ***************************************************************************************** //
-
-
-// required functions.
-// ***************************************************************************************** //
-var showFullData = async function(keyspace, table){
-    var query1 = `select * from ${keyspace}.${table};`;
-    try{
-        var resultset = await client.execute(query1);
-        return resultset;
-    } catch (e){
-        console.error(e)
-        return {
-            msg:"hvj",
-            err_code:401
-        };
-    }
-}
-
-var insert_into = async function(keyspace, table, data){
-    var query = `insert into ${keyspace}.${table} (id, name) values (?, ?);`
-    console.log("(40)body-parser input :" + JSON.stringify(data))
-    try {
-        return await client.execute(query, [data.id_of_user, data.name_of_user], { prepare : true, hints:['int', 'text'] });
-    } catch(e) {
-        console.error(e);
-        return {};
-    }
-}
-// ***************************************************************************************** //
-
-
+const table     = "covid_table";
 
 // Routers GET
 // ***************************************************************************************** //
@@ -81,7 +37,14 @@ app.get('/show_data', async (req, res)=>{
 // Routers POST
 // ***************************************************************************************** //
 app.post("/insert", async (req, res)=>{
-    await insert_into(keyspace, table, req.body);
+    await insert_into(keyspace, table, {
+        name : req.body.name,
+        age : parseInt(req.body.age),
+        gender : req.body.gender,
+        ph_no : req.body.ph_no.split(','),
+        p_status : req.body.p_status.split(','),
+        address : JSON.parse(req.body.address)
+    });
     res.status(201);
 });
 // ***************************************************************************************** //
